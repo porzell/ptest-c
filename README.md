@@ -5,7 +5,10 @@ Glad you asked!  PTest-C is short for PicoTest-C.
 ### PicoTest-C is a very lightweight but easy-to-use unit testing library for C.
 
 PTest-C follows a structure very familiar to users of GTest, but in a C environment.
-There is no need to create and manage a list of tests as is needed in many other C frameworks.
+
+It currently clocks in at under 300 LoC.
+
+Unlike many other C testing frameworks, there is no need to create and manage a global list of tests as they are automatically populated from all source files in linking order.
 
 ## So, how do I use this thing?
 Easy!  First off you've got to make a test case.  That'll look like this:
@@ -141,13 +144,14 @@ Tests run: 2    Tests Succeeded: 2      Tests Failed: 0
 ## Test Filtering
 
 PTest-C will automatically gather all ```P_TEST()``` and ```P_TEST_F()``` tests to
-run, so you don't need to worry about it.
+run from your compiled sources, so you don't need to worry about it.
 
 If you would like to run only certain tests, you can run all tests that partially match a given string like so:
 ```C
 int retval = P_RunTestsWith("Integration");
 ```
 That will run all test cases that contain the string "Integration" as a substring in the order they are declared.
+This is useful for grouping and executing tests by subsystem in a larger project.
 
 ## Nested functions with assertions
 
@@ -169,12 +173,12 @@ Doing so will not trip PTest-C up.  PTest-C even supports assertions in your tes
 ## Optional human-readable stack tracing on assertion failure
 
 On a failure, you might want some more information on why it failed.
-PTest-C is configurable to display a human-readable stack trace with line numbers and function names on an assertion failure.
+On platforms supporting `addr2line`, PTest-C is configurable to display a human-readable stack trace with line numbers and function names on an assertion failure.
 This works best if GCC/Clang is configured to output GDB debugging info, though PTest-C will still be able to provide some information, such as the function, line number, and assertion expression that triggered the failure on a test.
 
 To enable stack trace simply add the following to your GCC flags:
 ```
--ggdb -DPTEST_ENABLE_TRACE -DPTEST_TRACE_DEPTH=15
+-ggdb -DPTEST_ENABLE_TRACE -DPTEST_TRACE_DEPTH=[max stack trace depth]
 ```
 
 The maximum depth of the stack trace is configurable through PTEST_TRACE_DEPTH.
@@ -188,7 +192,9 @@ This can be set via ```P_SetFailMessage()```.
 ## Planned Features
 I plan on adding new features to PTest-C as I go along.  Right now it is quite small, however, it seems to be easier and more intuitive to use than a lot of other testing suites I've seen out there for C.
 
-Currently, I will work on making PTest-C able to support multi-threaded testing.  This shouldn't be difficult, but in the interest of getting something up, I neglected to include this at the moment.
+I am also considering work to make PTest-C able to support multi-threaded testing.  This shouldn't be difficult, but in the interest of getting something up, I neglected to include this at the moment.
+
+Currently, I'm hoping to be able to add stack trace support for MSVC/Windows.
 
 ## License
 PicoTest is licensed under the Apache License, so it's easy to integrate into any project, big or small.
@@ -196,8 +202,12 @@ PicoTest is licensed under the Apache License, so it's easy to integrate into an
 Copyright (c) 2018 Peter Orzell
 
 ## Compatibility
-PTest-C is currently set up to work with GCC/Clang on and requires constructor attribute support to function properly.
+PTest-C is currently set up to work with GCC/Clang and MSVC.
+
+PTest-C requires constructor attribute support to function properly using GCC/Clang, but takes advantage of PE segment linking pragmas to function properly in MSVC.
+
 The addr2line application is necessary for stack trace to function properly if enabled.  Unfortunately, there doesn't seem to be a better way to get this working than piping to addr2line, as backtrace_symbols() does not provide anything near as useful.
+Since addr2line is not available for Windows applications compiled with MSVC, stack trace support on Windows is not yet fully implemented although this is in the works.
 
 ## Have fun!
 Let me know if you end up using this!  I'll be working on it regularly.
